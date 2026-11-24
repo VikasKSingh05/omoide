@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Create virtual environment
+        run: python -m venv .venv
+
+      - name: Install package and dev tools
+        run: .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+
+      - name: Lint
+        run: .\.venv\Scripts\python.exe -m ruff check .
+
+      - name: Test
+        run: .\.venv\Scripts\python.exe -m pytest
+
+      - name: Ranking regression check
+        run: .\.venv\Scripts\python.exe scripts\eval_ranking.py
+        env:
+          PYTHONPATH: .
+
+      - name: Build frozen executable
+        run: .\.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean omoide.spec
+
+      - name: Smoke test frozen executable
+        shell: pwsh
+        run: |
+          $env:OMOIDE_HOME = Join-Path $env:RUNNER_TEMP 'omoide-ci'
+          $env:OMOIDE_SELFTEST_OUT = Join-Path $env:RUNNER_TEMP 'omoide-selftest.txt'
+          $trigger = Join-Path $pwd 'dist\omoide-selftest.trigger'
+          New-Item -ItemType File -Force $trigger | Out-Null
+          try {
+            $proc = Start-Process -FilePath '.\dist\Omoide.exe' -Wait -PassThru
+            if ($proc.ExitCode -ne 0) { exit $proc.ExitCode }
+            Get-Content $env:OMOIDE_SELFTEST_OUT
+          }
+          finally {
+            Remove-Item $trigger -ErrorAction SilentlyContinue
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: omoide-windows-exe
+          path: dist/Omoide.exe
+          if-no-files-found: error

@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Create virtual environment
+        run: python -m venv .venv
+
+      - name: Install package and dev tools
+        run: .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+
+      - name: Lint
+        run: .\.venv\Scripts\python.exe -m ruff check .
+
+      - name: Test
+        run: .\.venv\Scripts\python.exe -m pytest
+
+      - name: Ranking regression check
+        run: .\.venv\Scripts\python.exe scripts\eval_ranking.py
+        env:
+          PYTHONPATH: .
+
+      - name: Build frozen executable
+        run: .\.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean omoide.spec
+
+      - name: Smoke test frozen executable
+        shell: pwsh
+        run: |
+          $env:OMOIDE_HOME = Join-Path $env:RUNNER_TEMP 'omoide-release'
+          $env:OMOIDE_SELFTEST_OUT = Join-Path $env:RUNNER_TEMP 'omoide-selftest.txt'
+          $trigger = Join-Path $pwd 'dist\omoide-selftest.trigger'
+          New-Item -ItemType File -Force $trigger | Out-Null
+          try {
+            $proc = Start-Process -FilePath '.\dist\Omoide.exe' -Wait -PassThru
+            if ($proc.ExitCode -ne 0) { exit $proc.ExitCode }
+            Get-Content $env:OMOIDE_SELFTEST_OUT
+          }
+          finally {
+            Remove-Item $trigger -ErrorAction SilentlyContinue
+          }
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          & $iscc installer.iss /DMyAppVersion=$version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Create SHA256SUMS
+        shell: pwsh
+        run: |
+          $files = @('dist\Omoide.exe', 'installer-output\OmoideSetup.exe')
+          $lines = foreach ($file in $files) {
+            $hash = (Get-FileHash -Algorithm SHA256 -Path $file).Hash.ToLowerInvariant()
+            "$hash  $([System.IO.Path]::GetFileName($file))"
+          }
+          $lines | Set-Content -Path SHA256SUMS -Encoding utf8
+          Get-Content SHA256SUMS
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            dist\Omoide.exe `
+            installer-output\OmoideSetup.exe `
+            SHA256SUMS `
+            --title "Omoide $env:GITHUB_REF_NAME" `
+            --generate-notes

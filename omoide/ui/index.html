@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Omoide</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 5.5h15v11h-8.2L7.8 20v-3.5H4.5z"></path>
+            <path d="M8.5 10.2h7"></path>
+            <path d="M8.5 12.8h4.5"></path>
+          </svg>
+        </span>
+        <div class="brand-copy">
+          <h1>Omoide</h1>
+          <p>Remember what was in it.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="theme-toggle" class="icon-button" type="button" title="Switch theme" aria-label="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.4 8.4 0 1 0 20 14.5z"></path>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.6"></circle>
+            <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"></path>
+          </svg>
+        </button>
+        <button id="settings-toggle" class="icon-button" type="button" title="Settings" aria-label="Open settings" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.2 14.1a1.6 1.6 0 0 0 .3 1.8l.1.1-1.7 1.7-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2h-2.4v-.2a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1-1.7-1.7.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H6.8v-2.4h.2a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1 1.7-1.7.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V5.8h2.4v.2a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1 1.7 1.7-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1h.2v2.4h-.2a1.6 1.6 0 0 0-1.5 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="search-bar">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="10.8" cy="10.8" r="6.3"></circle>
+        <path d="m15.6 15.6 4.2 4.2"></path>
+      </svg>
+      <input id="search-input" type="text" autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="Search text, code, URLs, screenshots…" aria-label="Search clipboard history">
+      <kbd class="search-esc">esc</kbd>
+    </div>
+
+    <main class="workspace">
+      <section class="results-panel" aria-label="Results">
+        <div class="panel-heading">
+          <span>Results</span>
+          <span id="result-count" class="panel-count">—</span>
+        </div>
+        <div id="results" class="results-list" role="listbox" aria-label="Clipboard results"></div>
+      </section>
+
+      <section class="preview-panel" aria-label="Preview">
+        <div class="preview-header">
+          <div class="preview-title">
+            <span id="preview-kind" class="kind-badge">—</span>
+            <span id="preview-app" class="preview-app">No selection</span>
+          </div>
+          <span id="preview-time" class="preview-time"></span>
+        </div>
+        <div id="preview-body" class="preview-body"></div>
+        <div id="preview-meta" class="preview-meta"></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-stats">
+        <span id="footer-count">No results</span>
+        <span class="dot-separator">·</span>
+        <span id="footer-timing">Type to search</span>
+      </div>
+      <div class="footer-hints" aria-hidden="true">
+        <kbd>↑</kbd><kbd>↓</kbd> move
+        <span class="dot-separator">·</span>
+        <kbd>↵</kbd> paste
+        <span class="dot-separator">·</span>
+        <kbd>ctrl</kbd>+<kbd>↵</kbd> copy
+        <span class="dot-separator">·</span>
+        <kbd>ctrl</kbd>+<kbd>p</kbd> pin
+      </div>
+    </footer>
+  </div>
+
+  <aside id="settings-drawer" class="drawer" aria-hidden="true" aria-label="Settings">
+    <div class="drawer-head">
+      <div>
+        <h2>Settings</h2>
+        <p>Stored locally on this machine.</p>
+      </div>
+      <button id="settings-close" class="icon-button" type="button" title="Close settings" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <form id="settings-form" class="drawer-form">
+      <div class="field">
+        <label for="set-hotkey">Hotkey</label>
+        <input id="set-hotkey" type="text" autocomplete="off" spellcheck="false" placeholder="ctrl+shift+v">
+        <p class="field-help">Restart may be required for hotkey changes.</p>
+      </div>
+
+      <div class="field checkbox-field">
+        <input id="set-capture" type="checkbox">
+        <div>
+          <label for="set-capture">Capture enabled</label>
+          <p class="field-help">Uncheck to pause new clips without quitting Omoide.</p>
+        </div>
+      </div>
+
+      <div class="field checkbox-field">
+        <input id="set-ocr" type="checkbox">
+        <div>
+          <label for="set-ocr">OCR screenshots</label>
+          <p class="field-help">Read text inside captured images.</p>
+        </div>
+      </div>
+
+      <div class="field checkbox-field">
+        <input id="set-store-titles" type="checkbox">
+        <div>
+          <label for="set-store-titles">Store window titles</label>
+          <p class="field-help">Also remember the window title; off by default.</p>
+        </div>
+      </div>
+
+      <div class="field checkbox-field">
+        <input id="set-redact-agent" type="checkbox">
+        <div>
+          <label for="set-redact-agent">Redact secrets from agent results</label>
+          <p class="field-help">Re-scan MCP responses for credentials before returning them.</p>
+        </div>
+      </div>
+
+      <div class="field checkbox-field">
+        <input id="set-mcp" type="checkbox">
+        <div>
+          <label for="set-mcp">Enable MCP tools</label>
+          <p class="field-help">Allow read-only clipboard search from local coding agents.</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="set-retention">Retention (days)</label>
+        <input id="set-retention" type="number" min="0" max="3650" step="1">
+        <p class="field-help">Older clips are removed automatically.</p>
+      </div>
+
+      <div class="field">
+        <label for="set-excluded">Excluded apps</label>
+        <textarea id="set-excluded" rows="4" spellcheck="false" placeholder="One app per line"></textarea>
+        <p class="field-help">Clipboard changes from these apps are ignored.</p>
+      </div>
+
+      <button id="settings-save" class="primary-button" type="submit">Save settings</button>
+    </form>
+
+    <div class="stats-card">
+      <h3>History</h3>
+      <div id="stats-line" class="stats-line">Loading…</div>
+    </div>
+  </aside>
+
+  <div id="onboarding" class="onboarding" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div class="onboarding-card">
+      <div class="onboarding-head">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 5.5h15v11h-8.2L7.8 20v-3.5H4.5z"></path>
+            <path d="M8.5 10.2h7"></path>
+            <path d="M8.5 12.8h4.5"></path>
+          </svg>
+        </span>
+        <div>
+          <h2 id="onboarding-title">Welcome to Omoide</h2>
+          <p id="onboarding-step-label">Step 1 of 3 · What to capture</p>
+        </div>
+      </div>
+
+      <div class="onboarding-progress" aria-hidden="true">
+        <span class="is-active"></span><span></span><span></span>
+      </div>
+
+      <div class="onboarding-body">
+        <section class="onboarding-step is-active" data-step="0">
+          <h3>What should Omoide remember?</h3>
+          <label class="onboarding-check">
+            <input id="onboard-capture" type="checkbox" checked>
+            <span><strong>Capture clipboard changes</strong><small>Text, code, URLs and screenshots.</small></span>
+          </label>
+          <label class="onboarding-check">
+            <input id="onboard-ocr" type="checkbox" checked>
+            <span><strong>Read text inside images</strong><small>Local OCR only. Nothing is uploaded.</small></span>
+          </label>
+        </section>
+
+        <section class="onboarding-step" data-step="1">
+          <h3>Choose your hotkey</h3>
+          <label class="onboarding-field">
+            <span>Summon the search overlay</span>
+            <input id="onboard-hotkey" type="text" autocomplete="off" spellcheck="false" placeholder="ctrl+shift+v">
+          </label>
+          <p class="onboarding-note">Use a combination you do not already use in another app.</p>
+        </section>
+
+        <section class="onboarding-step" data-step="2">
+          <h3>Privacy, by default</h3>
+          <ul class="onboarding-list">
+            <li>No account, no cloud, no telemetry.</li>
+            <li>Password managers and secret-looking clips are skipped.</li>
+            <li>Clips stay in <code>%APPDATA%\\Omoide</code> until retention removes them.</li>
+          </ul>
+          <p class="onboarding-note">You can pause capture or delete clips at any time from Settings.</p>
+        </section>
+      </div>
+
+      <div class="onboarding-actions">
+        <button id="onboard-back" class="ghost-button" type="button" disabled>Back</button>
+        <span class="onboarding-spacer"></span>
+        <button id="onboard-next" class="primary-button" type="button">Next</button>
+        <button id="onboard-finish" class="primary-button" type="button" hidden>Start using Omoide</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+</body>
+</html>
